@@ -35,7 +35,7 @@ type Firehose interface {
 }
 
 type Event struct {
-	Records []Record `json:"records"`
+	Records []*Record `json:"records"`
 }
 
 type Record struct {
@@ -50,10 +50,16 @@ type Data struct {
 	NonTerminatingMatchingRules []interface{} `json:"nonTerminatingMatchingRules"`
 }
 
-func (handler *Handler) extractRecords(ev *Event) ([]*firehose.Record, []*firehose.Record) {
+func (handler *Handler) extractRecords(ev *Event) ([]*Record, []*firehose.Record, []*firehose.Record) {
 	blockRecords := []*firehose.Record{}
 	countRecords := []*firehose.Record{}
-	for _, record := range ev.Records {
+	records := make([]*Record, len(ev.Records))
+	for i, record := range ev.Records {
+		records[i] = &Record{
+			RecordID: record.RecordID,
+			Result:   "Ok",
+			Data:     record.Data,
+		}
 		decodedData, err := base64.StdEncoding.DecodeString(record.Data)
 		if err != nil {
 			logrus.WithFields(logrus.Fields{
@@ -81,11 +87,11 @@ func (handler *Handler) extractRecords(ev *Event) ([]*firehose.Record, []*fireho
 			continue
 		}
 	}
-	return blockRecords, countRecords
+	return records, blockRecords, countRecords
 }
 
 func (handler *Handler) Do(ctx context.Context, ev *Event) *Event {
-	blockRecords, countRecords := handler.extractRecords(ev)
+	records, blockRecords, countRecords := handler.extractRecords(ev)
 
 	if len(blockRecords) != 0 {
 		input := &firehose.PutRecordBatchInput{
@@ -113,5 +119,7 @@ func (handler *Handler) Do(ctx context.Context, ev *Event) *Event {
 		}
 	}
 
-	return ev
+	return &Event{
+		Records: records,
+	}
 }
