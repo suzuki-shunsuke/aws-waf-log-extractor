@@ -91,7 +91,7 @@ func (handler *Handler) extractRecords(ev *Event) ([]*Record, []*firehose.Record
 	return records, blockRecords, countRecords
 }
 
-func (handler *Handler) Do(ctx context.Context, ev *Event) *Event {
+func (handler *Handler) Do(ctx context.Context, ev *Event) (*Event, error) {
 	lc, _ := lambdacontext.FromContext(ctx)
 	requestID := lc.AwsRequestID
 
@@ -130,5 +130,5 @@ func (handler *Handler) Do(ctx context.Context, ev *Event) *Event {
 
 	return &Event{
 		Records: records,
-	}
+	}, nil
 }
