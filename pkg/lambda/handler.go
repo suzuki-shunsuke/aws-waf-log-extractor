@@ -97,10 +97,6 @@ func (handler *Handler) Do(ctx context.Context, ev *Event) (*Event, error) {
 
 	records, blockRecords, countRecords := handler.extractRecords(ev)
 	logE := logrus.WithField("request_id", requestID)
-	logE.WithField("records", ev.Records).Debug("input")
-	logE.WithField("records", records).Debug("return")
-	logE.WithField("records", blockRecords).Debug("block_records")
-	logE.WithField("records", countRecords).Debug("count_records")
 
 	if len(blockRecords) != 0 {
 		input := &firehose.PutRecordBatchInput{
@@ -108,7 +104,7 @@ func (handler *Handler) Do(ctx context.Context, ev *Event) (*Event, error) {
 			Records:            blockRecords,
 		}
 		if _, err := handler.Firehose.PutRecordBatchWithContext(ctx, input); err != nil {
-			logrus.WithFields(logrus.Fields{
+			logE.WithFields(logrus.Fields{
 				"delivery_stream_name": aws.StringValue(input.DeliveryStreamName),
 				"num_records":          len(input.Records),
 			}).WithError(err).Error("put block logs to Firehose")
@@ -121,7 +117,7 @@ func (handler *Handler) Do(ctx context.Context, ev *Event) (*Event, error) {
 			Records:            countRecords,
 		}
 		if _, err := handler.Firehose.PutRecordBatchWithContext(ctx, input); err != nil {
-			logrus.WithFields(logrus.Fields{
+			logE.WithFields(logrus.Fields{
 				"delivery_stream_name": aws.StringValue(input.DeliveryStreamName),
 				"num_records":          len(input.Records),
 			}).WithError(err).Error("put count logs to Firehose")
