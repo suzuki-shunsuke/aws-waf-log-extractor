@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"os"
 
+	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -91,7 +92,15 @@ func (handler *Handler) extractRecords(ev *Event) ([]*Record, []*firehose.Record
 }
 
 func (handler *Handler) Do(ctx context.Context, ev *Event) *Event {
+	lc, _ := lambdacontext.FromContext(ctx)
+	requestID := lc.AwsRequestID
+
 	records, blockRecords, countRecords := handler.extractRecords(ev)
+	logE := logrus.WithField("request_id", requestID)
+	logE.WithField("records", ev.Records).Debug("input")
+	logE.WithField("records", records).Debug("return")
+	logE.WithField("records", blockRecords).Debug("block_records")
+	logE.WithField("records", countRecords).Debug("count_records")
 
 	if len(blockRecords) != 0 {
 		input := &firehose.PutRecordBatchInput{
