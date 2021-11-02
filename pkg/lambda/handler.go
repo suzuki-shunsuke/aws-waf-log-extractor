@@ -108,6 +108,11 @@ func (handler *Handler) Do(ctx context.Context, ev *Event) (*Event, error) {
 				"delivery_stream_name": aws.StringValue(input.DeliveryStreamName),
 				"num_records":          len(input.Records),
 			}).WithError(err).Error("put block logs to Firehose")
+		} else {
+			logE.WithFields(logrus.Fields{
+				"delivery_stream_name": aws.StringValue(input.DeliveryStreamName),
+				"num_records":          len(input.Records),
+			}).Info("put block logs to Firehose")
 		}
 	}
 
@@ -121,6 +126,11 @@ func (handler *Handler) Do(ctx context.Context, ev *Event) (*Event, error) {
 				"delivery_stream_name": aws.StringValue(input.DeliveryStreamName),
 				"num_records":          len(input.Records),
 			}).WithError(err).Error("put count logs to Firehose")
+		} else {
+			logE.WithFields(logrus.Fields{
+				"delivery_stream_name": aws.StringValue(input.DeliveryStreamName),
+				"num_records":          len(input.Records),
+			}).Info("put count logs to Firehose")
 		}
 	}
 
